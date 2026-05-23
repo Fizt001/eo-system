@@ -1,92 +1,185 @@
-# Blueprint Sistem Manajemen Event Organizer (EO)
+# 🚀 Sistem Manajemen Event Organizer (EO)
 *(Versi Update — Tersinkronisasi dengan Use Case & Activity Diagram Final)*
 
-Berdasarkan narasi studi kasus dan penyempurnaan rancangan model sistem (Use Case & Activity Diagram), berikut adalah rumusan konsep *blueprint* sistem yang solid, konsisten, dan dapat diskalakan (*scalable*).
+Platform enterprise terintegrasi yang dirancang khusus untuk mengelola operasional Event Organizer (EO) secara profesional, efisien, dan bebas dari kendala komunikasi rill di lapangan.
 
 ---
 
-## 1. Analisis "Jebakan" & Benang Merah
-
-Berikut adalah beberapa narasi yang berpotensi menjadi "jebakan" jika diimplementasikan secara mentah, beserta solusi sistemiknya:
-
-- **Jebakan 1:** Menganggap sistem harus dirancang spesifik/berbeda untuk "seminar, konser musik, hingga pernikahan".
-  - **Benang Merah:** Sistem tidak boleh di-*hardcode* untuk jenis acara tertentu. Harus ada modul **Master Data Kategori Event** yang dinamis, sehingga EO bisa menambah jenis acara baru kapan saja tanpa mengubah kode.
-- **Jebakan 2:** "Komunikasi telepon dan pesan instan" yang dilakukan secara manual.
-  - **Benang Merah:** Kita tidak perlu membangun aplikasi *chatting* sendiri di dalam sistem. Solusinya adalah menyediakan fitur **Inquiry System** di portal pelanggan dan fitur **Log Aktivitas** (*Activity Log*) bagi Event Coordinator untuk mencatat semua rekam jejak komunikasi dan keputusan penting.
-- **Jebakan 3:** "Kerja sama dengan pihak ketiga / vendor".
-  - **Benang Merah:** Membangun portal khusus bagi vendor (agar bisa login) mungkin terlalu kompleks untuk fase awal. Solusi fase 1 adalah membuat **Modul Manajemen Vendor Internal** yang dikelola sepihak oleh tim EO untuk mendata, mengalokasikan, dan mencatat biaya vendor.
-- **Jebakan 4:** "Perubahan permintaan dari pelanggan".
-  - **Benang Merah:** Dokumen Penawaran (RAB) tidak boleh statis. Harus ada mekanisme **Revisi Penawaran (Versioning)** sehingga riwayat perubahan harga dan konsep (dari versi 1.0 ke versi revisi) dapat dilacak secara akurat.
+### 📂 Dokumen Arsip Emas Perancangan (Golden Archives)
+Sebelum diimplementasikan ke dalam kode, rancangan sistem ini telah dianalisis secara mendalam untuk menjamin konsistensi logika:
+* 📊 **[Usecase & Activity Diagram Final](docs/usecase_dan_activity_diagram.md)** — Berisi detail 28 use case dan pemetaan diagram alur aktivitas lengkap untuk kelima aktor.
+* 🔍 **[Analisis Usecase & Konsistensi](docs/analisis_usecase_dan_konsistensi.md)** — Analisis detail mitigasi bug logika, pencegahan *deadlock*, dan validasi aturan bisnis.
 
 ---
 
-## 2. Aktor / Pengguna Sistem (Role-Based Access Control)
+## 🛡️ 1. Analisis "Jebakan" & Benang Merah
 
-Terdapat **5 peran (Role)** spesifik untuk menjaga prinsip pemisahan wewenang (*segregation of duties*) dan mencegah *bug* logika bisnis:
+Berdasarkan studi kasus bisnis, kami mengidentifikasi 4 "jebakan" logis yang berpotensi menyulitkan tim pengembang, dan menyelesaikannya secara elegan melalui arsitektur sistem berikut:
 
-1. **Manager (Internal):** Pemilik/Pimpinan EO. Memiliki otoritas tertinggi untuk menyetujui Penawaran/RAB sebelum dikirim ke pelanggan, mengelola data pengguna internal, master data, serta memantau dashboard laporan (Laba/Rugi).
-2. **Event Coordinator (Internal):** Pengelola *project event* (Project Manager). Bertugas merespons permintaan masuk, menyusun Penawaran (RAB), merencanakan tugas, mengalokasikan vendor, memverifikasi hasil kerja Staff, dan mengubah status utama event.
-3. **Staff Operasional (Internal):** Eksekutor lapangan. Bertugas melihat daftar tugas dari Event Coordinator, mengerjakan tugas tersebut, serta mengunggah bukti pengerjaan/catatan.
-4. **Finance (Internal):** Pengelola keuangan. Fokus pada pembuatan tagihan (Invoice), validasi pembayaran dari pelanggan, dan pencatatan biaya yang dibayarkan ke Vendor (HPP).
-5. **Customer / Pelanggan (Eksternal):** Klien EO. Menggunakan portal pelanggan (*Customer Portal*) untuk mengajukan permintaan acara, meninjau/menyetujui Penawaran, mengonfirmasi tagihan, dan melihat progres event secara pasif.
-
----
-
-## 3. Modul Utama Sistem
-
-Rancangan modul untuk pengembangan aplikasi (Laravel):
-
-### A. Modul Autentikasi & Pengaturan (Universal)
-- **Otentikasi Universal:** Login terpusat untuk semua aktor.
-- **Registrasi Pelanggan:** Formulir pendaftaran mandiri khusus Customer.
-- **Manajemen Pengguna:** Penambahan staf internal oleh Manager.
-- **Master Data:** Kelola kategori event, kategori vendor, dan standar item biaya.
-
-### B. Modul Customer Relationship Management (CRM)
-- **Inquiry Management:** Formulir pengajuan acara dari portal pelanggan (mencakup tanggal, konsep, lokasi, lampiran file).
-- **Riwayat Pelanggan:** Pencatatan *history* event yang pernah diselenggarakan oleh pelanggan bersangkutan.
-
-### C. Modul Penawaran (Quotation)
-- **Penyusunan RAB:** Kalkulator otomatis subtotal dan grand total untuk estimasi biaya oleh Event Coordinator. Termasuk fitur *template* dari event lama.
-- **Approval Berjenjang:** Penawaran wajib disetujui Manager di internal, baru kemudian disetujui oleh Customer di eksternal.
-- **Quotation Versioning:** Fitur salinan revisi penawaran jika terjadi penolakan atau *change request*.
-
-### D. Modul Project & Task Management (Inti Operasional)
-- **Event Workspace:** Ruang kerja digital untuk mengelola satu acara tertentu (mencakup timeline, status event).
-- **Task Delegation & Verification:** Event Coordinator membuat *checklist* tugas $\rightarrow$ dikerjakan Staff $\rightarrow$ dikembalikan ke EC untuk diverifikasi (*Approval Tasks*).
-- **Activity Logging:** Catatan manual (*log*) pada titik-titik kritis (setelah menyusun RAB, penutupan event, dll).
-
-### E. Modul Manajemen Vendor
-- **Direktori Vendor:** Database kontak dan spesialisasi layanan vendor.
-- **Alokasi Vendor:** Penunjukan vendor untuk event tertentu yang berjalan paralel dengan eksekusi tugas tim internal.
-
-### F. Modul Keuangan (Finance & Billing)
-- **Invoicing:** Pembuatan tagihan secara parsial (DP / Termin) atau lunas penuh.
-- **Konfirmasi Pembayaran:** Pelanggan unggah bukti transfer $\rightarrow$ divalidasi oleh Finance.
-- **Pencatatan HPP (Harga Pokok Penjualan):** Pencatatan *cost* modal yang dibayarkan EO kepada vendor.
-- **Laporan Laba/Rugi:** Perhitungan otomatis selisih Pendapatan (Tagihan Pelanggan) dikurangi Pengeluaran (Biaya Vendor) per event.
+| ⚠️ Jebakan Logika Bisnis | 💡 Solusi & Benang Merah Sistem |
+| :--- | :--- |
+| **Jebakan 1: Hardcoding Jenis Event**<br>Menganggap sistem harus dikodekan berbeda untuk seminar, konser, atau pernikahan. | **Master Data Kategori Event Dinamis**<br>Tipe event dikelola sebagai master data. Tim EO bebas menambahkan kategori baru kapan saja tanpa memodifikasi kode program (*highly scalable*). |
+| **Jebakan 2: Komunikasi Manual di Luar Sistem**<br>Mengandalkan telepon/chat manual tanpa adanya rekam jejak keputusan penting. | **Inquiry Portal & Centralized Activity Log**<br>Klien mengajukan permintaan terstruktur di portal, dan Event Coordinator mencatat log aktivitas penting secara kronologis di sistem. |
+| **Jebakan 3: Portal Vendor Pihak Ketiga**<br>Membangun portal login khusus vendor luar yang dinilai terlalu rumit untuk fase awal. | **Modul Manajemen Vendor Internal (Fase 1)**<br>Tim EO mengelola direktori kontak, spesialisasi, dan biaya vendor secara sepihak untuk mempercepat operasional tanpa membebani vendor. |
+| **Jebakan 4: Perubahan Permintaan Pelanggan**<br>Dokumen penawaran dan RAB bersifat statis sehingga memicu selisih harga akhir. | **Quotation Versioning (Revisi Berjenjang)**<br>Mendukung revisi penawaran (versi 1.0, 1.1, dst.) agar riwayat penyesuaian harga dan perubahan konsep tetap terlacak rapi. |
 
 ---
 
-## 4. Alur Kerja (Workflow) Sistem Terintegrasi
+## 👥 2. Aktor & Hak Akses (Role-Based Access Control)
 
-Alur ini dirancang tanpa titik buntu (*dead-end*) dan sejalan dengan Activity Diagram final:
+Sistem ini menerapkan pemisahan wewenang (*segregation of duties*) yang ketat melalui **5 Peran Pengguna** untuk mencegah kebocoran data dan menjaga integritas operasional:
 
-1. **Fase Permintaan (Inquiry):**
-   - Customer *login* ke portal dan mengajukan Permintaan Acara.
-   - Event Coordinator (EC) meninjau kelayakan permintaan tersebut.
-2. **Fase Penawaran (Quotation):**
-   - EC menganalisis permintaan dan menyusun draf Penawaran (RAB).
-   - Penawaran diverifikasi dan **disetujui oleh Manager**.
-   - Sistem meneruskan Penawaran ke Customer.
-   - Customer me-*review* dan menekan **Setuju** (atau meminta Revisi). Sistem otomatis membuatkan Ruang Kerja (*Event Workspace*).
-3. **Fase Persiapan (Paralel):**
-   - EC menyusun timeline dan *checklist* tugas.
-   - **Fork A (Tugas):** EC menugaskan pekerjaan $\rightarrow$ Staff Operasional mengerjakan $\rightarrow$ EC memverifikasi hasil.
-   - **Fork B (Vendor):** Secara bersamaan, EC mengalokasikan dan *booking* vendor yang dibutuhkan.
-4. **Fase Pelaksanaan:**
-   - Setelah semua tugas diverifikasi dan vendor siap, EC mendeklarasikan bahwa **Event Dilaksanakan**.
-5. **Fase Penagihan & Penutupan (Paralel):**
-   - **Fork A (Status):** EC mengubah status event menjadi **"Selesai"** dan mencatat *log* akhir.
-   - **Fork B (Keuangan):** Finance merilis *Invoice*, Customer melunasi pembayaran, Finance mencatat biaya Vendor (HPP).
-   - Sistem secara otomatis mengalkulasi Laba/Rugi. Setelah jalur A dan B terpenuhi, sistem mengunci status event menjadi **"Closed"**.
+* **👑 Manager (Internal)**
+  * Memiliki otoritas tertinggi di dalam sistem.
+  * Menyetujui Penawaran/RAB sebelum dikirim ke pelanggan.
+  * Mengelola data staf internal, master data sistem, dan memantau dashboard laporan keuangan (Laba/Rugi).
+* **🧭 Event Coordinator (Internal)**
+  * Bertindak sebagai *Project Manager* event.
+  * Merespons inquiry masuk, menyusun draf Penawaran (RAB), merencanakan timeline, mengalokasikan vendor.
+  * Memverifikasi hasil kerja Staff Operasional, dan memperbarui status utama event.
+* **🛠️ Staff Operasional (Internal)**
+  * Bertindak sebagai eksekutor teknis lapangan.
+  * Memantau daftar checklist tugas yang diberikan oleh Event Coordinator.
+  * Menyelesaikan tugas dan mengunggah bukti pengerjaan (*task submission*).
+* **💳 Finance (Internal)**
+  * Bertindak sebagai pengelola keuangan proyek.
+  * Menerbitkan Invoice (DP / Termin / Lunas).
+  * Memvalidasi bukti transfer pembayaran dari pelanggan, dan mencatat pengeluaran vendor (HPP).
+* **👤 Customer / Pelanggan (Eksternal)**
+  * Klien dari Event Organizer.
+  * Menggunakan *Customer Portal* untuk mengajukan permintaan event, meninjau, serta menyetujui Quotation/RAB.
+  * Mengunggah bukti pembayaran, dan memantau progres pelaksanaan event secara real-time.
+
+---
+
+## 📦 3. Modul Utama Aplikasi (Laravel 12)
+
+Berikut adalah komponen modul yang dirancang untuk diimplementasikan ke dalam struktur project Laravel 12:
+
+### 🔒 A. Modul Autentikasi & Pengaturan (Universal)
+* **Otentikasi Universal:** Login terpusat untuk aktor internal dan eksternal.
+* **Registrasi Pelanggan:** Formulir pendaftaran mandiri khusus Customer.
+* **Manajemen Pengguna:** Penambahan staf internal oleh Manager.
+* **Master Data:** Konfigurasi dinamis kategori event, kategori vendor, dan standar item biaya.
+
+### 🤝 B. Modul Customer Relationship Management (CRM)
+* **Inquiry Management:** Formulir pengajuan acara terstruktur dari portal pelanggan (konsep, estimasi tanggal, lokasi, anggaran, lampiran file).
+* **Riwayat Pelanggan:** Rekam jejak seluruh event terdahulu yang pernah diajukan oleh pelanggan yang sama.
+
+### 📄 C. Modul Penawaran (Quotation)
+* **Penyusunan RAB:** Kalkulator otomatis subtotal, diskon, pajak, dan grand total untuk estimasi biaya oleh Event Coordinator.
+* **Template System:** Fitur menduplikasi rancangan RAB dari event lama yang sukses.
+* **Approval Berjenjang:** Verifikasi internal oleh Manager sebelum draf penawaran dikirimkan ke Customer.
+* **Quotation Versioning:** Pembuatan versi baru penawaran otomatis jika Customer meminta revisi konsep/harga.
+
+### ⚡ D. Modul Project & Task Management (Core Operasional)
+* **Event Workspace:** Ruang koordinasi digital khusus per-acara yang menampilkan timeline dan perkembangan status utama.
+* **Task Delegation & Verification:** Penugasan checklist kerja oleh EC $\rightarrow$ diselesaikan oleh Staff $\rightarrow$ diverifikasi kembali oleh EC.
+* **System Activity Logger:** Pencatatan otomatis keputusan-keputusan krusial di sistem (misal: "RAB disetujui", "Vendor dialokasikan").
+
+### 🚚 E. Modul Manajemen Vendor
+* **Direktori Vendor:** Database lengkap kontak, spesialisasi, dan status kemitraan vendor.
+* **Alokasi Vendor:** Penugasan vendor terpilih pada event aktif beserta pencatatan nilai kontrak kerja sama.
+
+### 💰 F. Modul Keuangan (Finance & Billing)
+* **Billing Engine:** Pembuatan tagihan (Invoice) dengan metode pembayaran bertahap (Down Payment / Termin / Lunas).
+* **Payment Gate & Validation:** Pelanggan mengunggah bukti bayar, Finance memvalidasi untuk meloloskan transaksi.
+* **HPP Tracker:** Pencatatan pengeluaran rill kepada vendor sebagai Harga Pokok Penjualan.
+* **Auto Laba/Rugi Report:** Perhitungan profitabilitas bersih per event secara otomatis (Total Tagihan - Total Biaya Vendor).
+
+---
+
+## 🔄 4. Alur Kerja (Workflow) Sistem Terintegrasi
+
+Alur kerja berikut dirancang tanpa *deadlock* (titik buntu) untuk menjamin kelancaran sistem dari awal hingga akhir:
+
+```mermaid
+flowchart TD
+    %% Styling
+    classDef customer fill:#EBF3FF,stroke:#2B78E4,stroke-width:2px;
+    classDef staff fill:#F3E8FF,stroke:#7E22CE,stroke-width:2px;
+    classDef ec fill:#F0FDF4,stroke:#15803D,stroke-width:2px;
+    classDef manager fill:#FEF3C7,stroke:#D97706,stroke-width:2px;
+    classDef finance fill:#FDF2F8,stroke:#DB2777,stroke-width:2px;
+    
+    %% Nodes
+    A[Pelanggan Ajukan Inquiry]:::customer --> B[Event Coordinator Tinjau & Terima]:::ec
+    B --> C[EC Susun Draf RAB / Quotation]:::ec
+    C --> D[Manager Verifikasi & Setujui RAB]:::manager
+    D --> E[Pelanggan Tinjau Quotation]:::customer
+    
+    E -- Meminta Revisi --> C
+    E -- Menyetujui RAB --> F[Sistem Buat Event Workspace]:::ec
+    
+    F --> G1[EC Buat & Tugaskan Checklist Kerja]:::ec
+    F --> G2[EC Alokasikan & Booking Vendor]:::ec
+    
+    G1 --> H1[Staff Operasional Kerjakan & Upload Bukti]:::staff
+    H1 --> I1[EC Verifikasi & Approve Tugas]:::ec
+    
+    G2 --> H2[Vendor Siap & Dikonfirmasi]:::ec
+    
+    I1 & H2 --> J[EC Nyatakan Event Dilaksanakan]:::ec
+    
+    J --> K1[EC Selesaikan Event & Catat Log Akhir]:::ec
+    J --> K2[Finance Rilis Invoice Tagihan]:::finance
+    
+    K2 --> L1[Pelanggan Bayar & Upload Bukti]:::customer
+    L1 --> L2[Finance Validasi Pembayaran]:::finance
+    L2 --> L3[Finance Catat Biaya Vendor / HPP]:::finance
+    
+    K1 & L3 --> M[Sistem Hitung Otomatis Laba/Rugi]:::finance
+    M --> N[Sistem Mengunci Event - CLOSED]:::ec
+```
+
+### Penjelasan 5 Fase Utama:
+1. **Fase Permintaan (Inquiry):** Pelanggan masuk ke portal dan membuat draf inquiry $\rightarrow$ Ditinjau oleh Event Coordinator.
+2. **Fase Penawaran (Quotation):** EC menyusun RAB $\rightarrow$ Diverifikasi Manager internal $\rightarrow$ Dikirim ke Klien $\rightarrow$ Disetujui (atau direvisi) $\rightarrow$ Sistem membuat *Event Workspace* otomatis.
+3. **Fase Persiapan:** EC membuat *checklist* pengerjaan untuk Staff Operasional secara paralel dengan pemesanan vendor pendukung.
+4. **Fase Pelaksanaan:** Event dijalankan setelah tugas operasional terverifikasi aman dan seluruh vendor terkonfirmasi siap.
+5. **Fase Keuangan & Penutupan:** EC menyatakan event selesai, Finance memproses pelunasan invoice & mencatat biaya vendor. Sistem mengalkulasi laba/rugi bersih, lalu mengunci status event menjadi **CLOSED**.
+
+---
+
+## 🛠️ 5. Prasyarat & Panduan Instalasi Project
+
+Sebagai project berbasis **Laravel 12** yang memanfaatkan manajemen database modern, berikut adalah panduan dasar untuk mulai menjalankan project ini secara lokal:
+
+### 📋 Prasyarat Sistem
+* **PHP >= 8.2**
+* **Composer**
+* **Node.js & NPM**
+* **Database engine** (MySQL / SQLite / PostgreSQL)
+
+### 🚀 Cara Menjalankan Project
+1. **Clone Repository & Masuk ke Direktori:**
+   ```bash
+   git clone https://github.com/Fizt001/eo-system.git
+   cd eo-system
+   ```
+2. **Instalasi Dependensi PHP:**
+   ```bash
+   composer install
+   ```
+3. **Instalasi Dependensi Frontend:**
+   ```bash
+   npm install && npm run dev
+   ```
+4. **Salin Environment Configuration:**
+   ```bash
+   cp .env.example .env
+   ```
+   *Buka file `.env` dan atur detail database Anda pada baris `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD`.*
+5. **Generate Application Key:**
+   ```bash
+   php artisan key:generate
+   ```
+6. **Jalankan Migrasi Database:**
+   ```bash
+   php artisan migrate
+   ```
+7. **Jalankan Laravel Dev Server:**
+   ```bash
+   php artisan serve
+   ```
+   *Buka browser Anda di `http://127.0.0.1:8000`.*
