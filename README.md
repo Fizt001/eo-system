@@ -12,16 +12,16 @@ Sebelum diimplementasikan ke dalam kode, rancangan sistem ini telah dianalisis s
 
 ---
 
-## 🛡️ 1. Analisis "Jebakan" & Benang Merah
+## 🛡️ 1. Prinsip Utama Perancangan & Solusi Arsitektur
 
-Berdasarkan studi kasus bisnis, kami mengidentifikasi 4 "jebakan" logis yang berpotensi menyulitkan tim pengembang, dan menyelesaikannya secara elegan melalui arsitektur sistem berikut:
+Sistem dirancang dengan pendekatan arsitektur modern untuk memastikan keandalan, skalabilitas, dan efisiensi operasional. Berikut adalah 4 pilar solusi utama yang diterapkan:
 
-| ⚠️ Jebakan Logika Bisnis | 💡 Solusi & Benang Merah Sistem |
+| 🏛️ Prinsip Arsitektur | 🎯 Implementasi Solusi Sistemis |
 | :--- | :--- |
-| **Jebakan 1: Hardcoding Jenis Event**<br>Menganggap sistem harus dikodekan berbeda untuk seminar, konser, atau pernikahan. | **Master Data Kategori Event Dinamis**<br>Tipe event dikelola sebagai master data. Tim EO bebas menambahkan kategori baru kapan saja tanpa memodifikasi kode program (*highly scalable*). |
-| **Jebakan 2: Komunikasi Manual di Luar Sistem**<br>Mengandalkan telepon/chat manual tanpa adanya rekam jejak keputusan penting. | **Inquiry Portal & Centralized Activity Log**<br>Klien mengajukan permintaan terstruktur di portal, dan Event Coordinator mencatat log aktivitas penting secara kronologis di sistem. |
-| **Jebakan 3: Portal Vendor Pihak Ketiga**<br>Membangun portal login khusus vendor luar yang dinilai terlalu rumit untuk fase awal. | **Modul Manajemen Vendor Internal (Fase 1)**<br>Tim EO mengelola direktori kontak, spesialisasi, dan biaya vendor secara sepihak untuk mempercepat operasional tanpa membebani vendor. |
-| **Jebakan 4: Perubahan Permintaan Pelanggan**<br>Dokumen penawaran dan RAB bersifat statis sehingga memicu selisih harga akhir. | **Quotation Versioning (Revisi Berjenjang)**<br>Mendukung revisi penawaran (versi 1.0, 1.1, dst.) agar riwayat penyesuaian harga dan perubahan konsep tetap terlacak rapi. |
+| **Skalabilitas Tipe Event**<br>Menghindari pembatasan jenis acara tertentu di dalam kode aplikasi. | **Master Data Kategori Event Dinamis**<br>Tipe event dikelola secara fleksibel melalui panel administrasi (*Master Data*). Pengguna dapat menambah kategori baru (seminar, konser, pernikahan, dll.) kapan saja tanpa mengubah kode sumber (*source code*). |
+| **Sentralisasi Komunikasi & Aktivitas**<br>Menghindari koordinasi tidak tercatat di luar sistem. | **Inquiry Portal & Centralized Activity Log**<br>Pelanggan mengajukan spesifikasi acara langsung melalui portal. Seluruh catatan keputusan penting dan perubahan instruksi dicatat secara kronologis dalam *Activity Log* terpusat. |
+| **Efisiensi Manajemen Kemitraan**<br>Penyederhanaan tata kelola dengan pihak ketiga pada fase awal. | **Modul Manajemen Vendor Internal (Fase 1)**<br>Pengelolaan data kontak, spesialisasi, dan pembiayaan vendor diatur secara internal oleh tim EO, meminimalkan kompleksitas integrasi sistem eksternal. |
+| **Akurasi & Transparansi Biaya**<br>Mengantisipasi perubahan kebutuhan pelanggan yang dinamis. | **Quotation & RAB Versioning (Revisi Berjenjang)**<br>Menyediakan riwayat versi dokumen penawaran (RAB v1.0, v1.1, dst.) agar setiap perubahan harga dan negosiasi konsep tercatat secara akurat dan transparan. |
 
 ---
 
