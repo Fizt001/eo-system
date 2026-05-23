@@ -1,59 +1,92 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Blueprint Sistem Manajemen Event Organizer (EO)
+*(Versi Update — Tersinkronisasi dengan Use Case & Activity Diagram Final)*
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Berdasarkan narasi studi kasus dan penyempurnaan rancangan model sistem (Use Case & Activity Diagram), berikut adalah rumusan konsep *blueprint* sistem yang solid, konsisten, dan dapat diskalakan (*scalable*).
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 1. Analisis "Jebakan" & Benang Merah
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Berikut adalah beberapa narasi yang berpotensi menjadi "jebakan" jika diimplementasikan secara mentah, beserta solusi sistemiknya:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Jebakan 1:** Menganggap sistem harus dirancang spesifik/berbeda untuk "seminar, konser musik, hingga pernikahan".
+  - **Benang Merah:** Sistem tidak boleh di-*hardcode* untuk jenis acara tertentu. Harus ada modul **Master Data Kategori Event** yang dinamis, sehingga EO bisa menambah jenis acara baru kapan saja tanpa mengubah kode.
+- **Jebakan 2:** "Komunikasi telepon dan pesan instan" yang dilakukan secara manual.
+  - **Benang Merah:** Kita tidak perlu membangun aplikasi *chatting* sendiri di dalam sistem. Solusinya adalah menyediakan fitur **Inquiry System** di portal pelanggan dan fitur **Log Aktivitas** (*Activity Log*) bagi Event Coordinator untuk mencatat semua rekam jejak komunikasi dan keputusan penting.
+- **Jebakan 3:** "Kerja sama dengan pihak ketiga / vendor".
+  - **Benang Merah:** Membangun portal khusus bagi vendor (agar bisa login) mungkin terlalu kompleks untuk fase awal. Solusi fase 1 adalah membuat **Modul Manajemen Vendor Internal** yang dikelola sepihak oleh tim EO untuk mendata, mengalokasikan, dan mencatat biaya vendor.
+- **Jebakan 4:** "Perubahan permintaan dari pelanggan".
+  - **Benang Merah:** Dokumen Penawaran (RAB) tidak boleh statis. Harus ada mekanisme **Revisi Penawaran (Versioning)** sehingga riwayat perubahan harga dan konsep (dari versi 1.0 ke versi revisi) dapat dilacak secara akurat.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 2. Aktor / Pengguna Sistem (Role-Based Access Control)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Terdapat **5 peran (Role)** spesifik untuk menjaga prinsip pemisahan wewenang (*segregation of duties*) dan mencegah *bug* logika bisnis:
 
-## Laravel Sponsors
+1. **Manager (Internal):** Pemilik/Pimpinan EO. Memiliki otoritas tertinggi untuk menyetujui Penawaran/RAB sebelum dikirim ke pelanggan, mengelola data pengguna internal, master data, serta memantau dashboard laporan (Laba/Rugi).
+2. **Event Coordinator (Internal):** Pengelola *project event* (Project Manager). Bertugas merespons permintaan masuk, menyusun Penawaran (RAB), merencanakan tugas, mengalokasikan vendor, memverifikasi hasil kerja Staff, dan mengubah status utama event.
+3. **Staff Operasional (Internal):** Eksekutor lapangan. Bertugas melihat daftar tugas dari Event Coordinator, mengerjakan tugas tersebut, serta mengunggah bukti pengerjaan/catatan.
+4. **Finance (Internal):** Pengelola keuangan. Fokus pada pembuatan tagihan (Invoice), validasi pembayaran dari pelanggan, dan pencatatan biaya yang dibayarkan ke Vendor (HPP).
+5. **Customer / Pelanggan (Eksternal):** Klien EO. Menggunakan portal pelanggan (*Customer Portal*) untuk mengajukan permintaan acara, meninjau/menyetujui Penawaran, mengonfirmasi tagihan, dan melihat progres event secara pasif.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## 3. Modul Utama Sistem
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Rancangan modul untuk pengembangan aplikasi (Laravel):
 
-## Contributing
+### A. Modul Autentikasi & Pengaturan (Universal)
+- **Otentikasi Universal:** Login terpusat untuk semua aktor.
+- **Registrasi Pelanggan:** Formulir pendaftaran mandiri khusus Customer.
+- **Manajemen Pengguna:** Penambahan staf internal oleh Manager.
+- **Master Data:** Kelola kategori event, kategori vendor, dan standar item biaya.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### B. Modul Customer Relationship Management (CRM)
+- **Inquiry Management:** Formulir pengajuan acara dari portal pelanggan (mencakup tanggal, konsep, lokasi, lampiran file).
+- **Riwayat Pelanggan:** Pencatatan *history* event yang pernah diselenggarakan oleh pelanggan bersangkutan.
 
-## Code of Conduct
+### C. Modul Penawaran (Quotation)
+- **Penyusunan RAB:** Kalkulator otomatis subtotal dan grand total untuk estimasi biaya oleh Event Coordinator. Termasuk fitur *template* dari event lama.
+- **Approval Berjenjang:** Penawaran wajib disetujui Manager di internal, baru kemudian disetujui oleh Customer di eksternal.
+- **Quotation Versioning:** Fitur salinan revisi penawaran jika terjadi penolakan atau *change request*.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### D. Modul Project & Task Management (Inti Operasional)
+- **Event Workspace:** Ruang kerja digital untuk mengelola satu acara tertentu (mencakup timeline, status event).
+- **Task Delegation & Verification:** Event Coordinator membuat *checklist* tugas $\rightarrow$ dikerjakan Staff $\rightarrow$ dikembalikan ke EC untuk diverifikasi (*Approval Tasks*).
+- **Activity Logging:** Catatan manual (*log*) pada titik-titik kritis (setelah menyusun RAB, penutupan event, dll).
 
-## Security Vulnerabilities
+### E. Modul Manajemen Vendor
+- **Direktori Vendor:** Database kontak dan spesialisasi layanan vendor.
+- **Alokasi Vendor:** Penunjukan vendor untuk event tertentu yang berjalan paralel dengan eksekusi tugas tim internal.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### F. Modul Keuangan (Finance & Billing)
+- **Invoicing:** Pembuatan tagihan secara parsial (DP / Termin) atau lunas penuh.
+- **Konfirmasi Pembayaran:** Pelanggan unggah bukti transfer $\rightarrow$ divalidasi oleh Finance.
+- **Pencatatan HPP (Harga Pokok Penjualan):** Pencatatan *cost* modal yang dibayarkan EO kepada vendor.
+- **Laporan Laba/Rugi:** Perhitungan otomatis selisih Pendapatan (Tagihan Pelanggan) dikurangi Pengeluaran (Biaya Vendor) per event.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 4. Alur Kerja (Workflow) Sistem Terintegrasi
+
+Alur ini dirancang tanpa titik buntu (*dead-end*) dan sejalan dengan Activity Diagram final:
+
+1. **Fase Permintaan (Inquiry):**
+   - Customer *login* ke portal dan mengajukan Permintaan Acara.
+   - Event Coordinator (EC) meninjau kelayakan permintaan tersebut.
+2. **Fase Penawaran (Quotation):**
+   - EC menganalisis permintaan dan menyusun draf Penawaran (RAB).
+   - Penawaran diverifikasi dan **disetujui oleh Manager**.
+   - Sistem meneruskan Penawaran ke Customer.
+   - Customer me-*review* dan menekan **Setuju** (atau meminta Revisi). Sistem otomatis membuatkan Ruang Kerja (*Event Workspace*).
+3. **Fase Persiapan (Paralel):**
+   - EC menyusun timeline dan *checklist* tugas.
+   - **Fork A (Tugas):** EC menugaskan pekerjaan $\rightarrow$ Staff Operasional mengerjakan $\rightarrow$ EC memverifikasi hasil.
+   - **Fork B (Vendor):** Secara bersamaan, EC mengalokasikan dan *booking* vendor yang dibutuhkan.
+4. **Fase Pelaksanaan:**
+   - Setelah semua tugas diverifikasi dan vendor siap, EC mendeklarasikan bahwa **Event Dilaksanakan**.
+5. **Fase Penagihan & Penutupan (Paralel):**
+   - **Fork A (Status):** EC mengubah status event menjadi **"Selesai"** dan mencatat *log* akhir.
+   - **Fork B (Keuangan):** Finance merilis *Invoice*, Customer melunasi pembayaran, Finance mencatat biaya Vendor (HPP).
+   - Sistem secara otomatis mengalkulasi Laba/Rugi. Setelah jalur A dan B terpenuhi, sistem mengunci status event menjadi **"Closed"**.
